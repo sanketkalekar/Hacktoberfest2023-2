@@ -1,74 +1,89 @@
-/*
- * To change this license header, choose License Headers in Project Properties.
- * To change this template file, choose Tools | Templates
- * and open the template in the editor.
- */
+ // This is an improved version of a generic queue implemented using an array.
+ // We've made several enhancements for better performance and usability.
+ // 
+ //  Changes Made:
+ //  1. Generics are now used to ensure type safety when storing elements in the queue.
+ //  2. We've implemented a circular buffer to enhance the efficiency of element removal.
+ //  3. The array is dynamically resized when it reaches capacity to accommodate more elements.
+ // 
+ //  @param <T> The type of elements to be stored in the queue.
+
+
+
+
 package queue;
 
-/**
- *
- * @author Zohaib Hassan Soomro
- */
-public class ArrayQueue implements Queue {
+public class ArrayQueue<T> implements Queue<T> {
 
-private int size;
-private Object array[];
+    private int size;
+    private int capacity;
+    private T[] array;
+    private int front;
+    private int rear;
 
-public ArrayQueue(int capacity) {
-    array = new Object[capacity];
-}
-
-@Override
-public Object first() {
-    if (this.isEmpty()) {
-        throw new IllegalStateException("Queue is empty!");
+    public ArrayQueue(int capacity) {
+        this.capacity = capacity;
+        array = (T[]) new Object[capacity];
+        front = rear = -1;
     }
-    return array[0];
-}
 
-@Override
-public Object remove() {
-    if (this.isEmpty()) {
-        throw new IllegalStateException("Queue is empty!");
+    @Override
+    public T first() {
+        if (isEmpty()) {
+            throw new IllegalStateException("Queue is empty!");
+        }
+        return array[front];
     }
-    Object obj = array[0];
-    System.arraycopy(array, 1, array, 0, size);
-    array[--size] = null;
-    return obj;
-}
 
-@Override
-public void add(Object obj) {
-    if (size == this.array.length) {
-        resizeArray();
+    @Override
+    public T remove() {
+        if (isEmpty()) {
+            throw new IllegalStateException("Queue is empty!");
+        }
+        T obj = array[front];
+        front = (front + 1) % capacity;
+        size--;
+        return obj;
     }
-    array[size++] = obj;
-}
 
-@Override
-public int size() {
-    return size;
-}
+    @Override
+    public void add(T obj) {
+        if (size == capacity) {
+            resizeArray();
+        }
+        rear = (rear + 1) % capacity;
+        array[rear] = obj;
+        size++;
+    }
 
-@Override
-public boolean isEmpty() {
-    return size == 0;
-}
+    @Override
+    public int size() {
+        return size;
+    }
 
-public void resizeArray() {
-    Object[] array2 = this.array;
-    this.array = new Object[2 * size];
-    System.arraycopy(array2, 0, this.array, 0, array2.length);
-}
+    @Override
+    public boolean isEmpty() {
+        return size == 0;
+    }
 
-public static void main(String[] args) {
-    ArrayQueue queue = new ArrayQueue(2);
-    queue.add(5);
-    queue.add(50);
-    queue.add("Hello!");
-    System.out.println(queue.remove());
-    System.out.println(queue.remove());
-    System.out.println(queue.first());
-}
+    public void resizeArray() {
+        T[] newArray = (T[]) new Object[2 * capacity];
+        for (int i = 0; i < size; i++) {
+            newArray[i] = array[(front + i) % capacity];
+        }
+        array = newArray;
+        front = 0;
+        rear = size - 1;
+        capacity *= 2;
+    }
 
+    public static void main(String[] args) {
+        ArrayQueue<Integer> queue = new ArrayQueue<>(2);
+        queue.add(5);
+        queue.add(50);
+        queue.add(10); // Adding one more element to trigger a resize
+        System.out.println(queue.remove()); // Should print 5
+        System.out.println(queue.remove()); // Should print 50
+        System.out.println(queue.first()); // Should print 10
+    }
 }
